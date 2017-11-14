@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <signal.h>
+#include "signal_handlers.h"
 #include "commands.h"
 #include "built_in.h"
 #include "utils.h"
@@ -9,7 +10,8 @@
 int main()
 {
   char buf[8096];
-
+  catch_sigint(SIGINT);
+  catch_sigtstp(SIGTSTP);
   while (1) {
     fgets(buf, 8096, stdin);
 
