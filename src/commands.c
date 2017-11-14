@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include "commands.h"
 #include "built_in.h"
 
@@ -50,9 +52,39 @@ int evaluate_command(int n_commands, struct single_command (*commands)[512])
     } else if (strcmp(com->argv[0], "exit") == 0) {
       return 1;
     } else {
-      fprintf(stderr, "%s: command not found\n", com->argv[0]);
-      return -1;
-    }
+	    int pid, pidChild;
+	    int status;
+	    pidChild = fork();
+	    if(pidChild ==0){
+	    	pid = getpid();
+		execv(com->argv[0], com->argv);
+		char path[5][32] = {"/usr/local/bin/",
+			"/usr/bin/","/bin/","/usr/sbin/","/sbin/"};
+	   	if(execv(com->argv[0],com->argv)==-1){
+			for(int i=0; i<5;i++){
+			   char* temp = (char*)malloc(sizeof(char)*strlen(path[i])+strlen(com->argv[0]));
+			   strcpy(temp,path[i]);
+			   strcat(temp, com->argv[0]);
+			   execv(temp, com->argv);
+			   free(temp);
+			}
+		}
+		else{
+			fprintf(stderr, "%s: command not found\n", com->argv[0]);
+			return 0;
+		}
+	
+	    }
+	    else if(pidChild>0){
+	    	pid = wait(&status);
+	    }
+	    else{
+	    	fprintf(stderr, "fork failed!");
+	    	exit(1);
+		return -1;
+	    }
+      return 0;
+	}
   }
 
   return 0;
